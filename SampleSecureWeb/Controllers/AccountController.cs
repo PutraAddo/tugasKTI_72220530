@@ -1,36 +1,41 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity; // Tambahkan ini
+using Microsoft.AspNetCore.Identity;
 using SampleSecureWeb.Data;
 using SampleSecureWeb.Models;
-using Microsoft.AspNetCore.Http; // Tambahkan untuk IHttpContextAccessor
-using System.Linq; // Tambahkan untuk LINQ
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.DataProtection;
+using System.Linq;
+using System;
 
 namespace SampleSecureWeb.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly PasswordHasher<User> _passwordHasher; // Untuk hashing password
+        private readonly PasswordHasher<User> _passwordHasher;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IDataProtector _protector;
 
-        // Constructor yang digabungkan
-        public AccountController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
+        // Constructor yang diperbaiki dengan parameter IDataProtectionProvider
+        public AccountController(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
-            _passwordHasher = new PasswordHasher<User>(); // Inisialisasi password hasher
+            _passwordHasher = new PasswordHasher<User>();
+            _protector = dataProtectionProvider.CreateProtector("SampleSecureWeb.SecretProtector"); // Perbaikan di sini
         }
 
-        [HttpPost] // Use POST instead of GET for logout
-public IActionResult Logout()
-{
-    // Clear session
-    _httpContextAccessor.HttpContext.Session.Clear();
-    
-    // Redirect to login page or home after logout
-    return RedirectToAction("Login", "Account");
-}
+        // POST: Account/Logout
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                _httpContextAccessor.HttpContext.Session.Clear();
+            }
 
+            return RedirectToAction("Login", "Account");
+        }
 
         // GET: Account/Register
         public IActionResult Register()
@@ -44,8 +49,9 @@ public IActionResult Logout()
         {
             if (ModelState.IsValid)
             {
-                // Hash password sebelum menyimpan
-                user.Password = _passwordHasher.HashPassword(user, user.Password); 
+                user.Password = _passwordHasher.HashPassword(user, user.Password);
+                string recoverySecret = Guid.NewGuid().ToString();
+                string encryptedSecret = _protector.Protect(recoverySecret);
                 _context.Users.Add(user);
                 _context.SaveChanges();
                 return RedirectToAction("Login");
@@ -61,24 +67,19 @@ public IActionResult Logout()
 
         // POST: Account/Login
         [HttpPost]
-        public IActionResult Login(User user)
+        public IActionResult Login(string username, string password)
         {
-            // Cari user berdasarkan username
-            var existingUser = _context.Users
-                .FirstOrDefault(u => u.Username == user.Username);
+            var existingUser = _context.Users.FirstOrDefault(u => u.Username == username);
 
-            // Verifikasi password
-            if (existingUser != null && 
-                _passwordHasher.VerifyHashedPassword(existingUser, existingUser.Password, user.Password) == PasswordVerificationResult.Success)
+            if (existingUser != null &&
+                _passwordHasher.VerifyHashedPassword(existingUser, existingUser.Password, password) == PasswordVerificationResult.Success)
             {
-                // Set session jika login sukses
-                HttpContext.Session.SetString("Username", user.Username);
+                HttpContext.Session.SetString("Username", username);
                 return RedirectToAction("Index", "Home");
             }
 
-            // Jika login gagal
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View(user);
+            return View();
         }
 
         // GET: Account/ChangePassword
@@ -91,23 +92,19 @@ public IActionResult Logout()
         [HttpPost]
         public IActionResult ChangePassword(string oldPassword, string newPassword)
         {
-            // Ambil username dari session
             var username = HttpContext.Session.GetString("Username");
 
             if (username != null)
             {
-                // Cari user berdasarkan username
                 var user = _context.Users.FirstOrDefault(u => u.Username == username);
 
                 if (user != null && _passwordHasher.VerifyHashedPassword(user, user.Password, oldPassword) == PasswordVerificationResult.Success)
                 {
-                    // Hash password baru
-                    user.Password = _passwordHasher.HashPassword(user, newPassword); 
+                    user.Password = _passwordHasher.HashPassword(user, newPassword);
                     _context.SaveChanges();
                     return RedirectToAction("Index", "Home");
                 }
 
-                // Jika password lama salah
                 ModelState.AddModelError(string.Empty, "Old password is incorrect.");
             }
             return View();

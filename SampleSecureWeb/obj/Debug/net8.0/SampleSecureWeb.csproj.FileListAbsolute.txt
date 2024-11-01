@@ -253,3 +253,12 @@ C:\KTI\SampleSecureWeb\obj\Debug\net8.0\SampleSecureWeb.pdb
 C:\KTI\SampleSecureWeb\obj\Debug\net8.0\SampleSecureWeb.genruntimeconfig.cache
 C:\KTI\SampleSecureWeb\obj\Debug\net8.0\ref\SampleSecureWeb.dll
 C:\KTI\SampleSecureWeb\obj\Debug\net8.0\SampleSecureWeb.sourcelink.json
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\KTI\SampleSecureWeb\obj\Debug\net8.0\SampleSecureWeb.MvcApplicationPartsAssemblyInfo.cs
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Google.Authenticator.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\QRCoder.dll
+C:\KTI\SampleSecureWeb\bin\Debug\net8.0\Otp.NET.dll

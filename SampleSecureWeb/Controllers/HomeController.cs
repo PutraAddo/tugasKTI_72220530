@@ -15,13 +15,13 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        
+
         ViewBag.username = "Putra Addo Dhaya Abadi";
 
-        
+
         List<string> fruits = new List<string> { "Banana", "Orange", "Apple" };
 
-        
+
         ViewBag.fruits = fruits;
 
         return View();
